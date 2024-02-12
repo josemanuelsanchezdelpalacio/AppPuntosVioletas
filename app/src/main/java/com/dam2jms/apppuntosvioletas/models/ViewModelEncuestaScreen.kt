@@ -28,4 +28,14 @@ class ViewModelEncuestaScreen : ViewModel() {
     fun siguientePregunta() {
         _uiState.value = _uiState.value.copy(numPregunta = _uiState.value.numPregunta + 1)
     }
+
+    fun mostrarPentagono() {
+        _uiState.value = _uiState.value.copy(showPentagon = true)
+    }
+
+    fun calcularPentagono() {
+        val answerCounts = _uiState.value.respuestasSeleccionadas.groupingBy { it }.eachCount()
+        val statistics = List(5) { answerCounts.getOrDefault(it, 0) }
+        _uiState.value = _uiState.value.copy(statistics = statistics, showPentagon = true)
+    }
 }

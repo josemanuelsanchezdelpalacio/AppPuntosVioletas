@@ -8,6 +8,7 @@ import com.dam2jms.apppuntosvioletas.navigation.AppScreens
 import com.dam2jms.apppuntosvioletas.states.UiState
 import android.widget.Toast
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,6 +17,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -54,6 +56,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
 import androidx.compose.ui.unit.sp
@@ -124,10 +127,6 @@ fun EncuestaScreenBodyContent(
 ) {
     val preguntasEncuesta = PreguntasEncuesta()
     val preguntasRelacion = preguntasEncuesta.preguntas
-    val statistics = remember { mutableStateOf<List<Int>>(listOf()) }
-    val showPentagon = remember { mutableStateOf(false) }
-    val currentQuestionIndex = remember { mutableStateOf(0) }
-
     val context = LocalContext.current
 
     Column(
@@ -136,17 +135,20 @@ fun EncuestaScreenBodyContent(
     ) {
         Spacer(modifier = Modifier.height(50.dp))
 
-        if (showPentagon.value) {
-            Box(modifier = Modifier.size(300.dp)) {
+        if (uiState.showPentagon) {
+            Box(
+                modifier = Modifier
+                    .size(300.dp)
+            ) {
                 Canvas(modifier = Modifier.fillMaxSize()) {
                     val center = Offset(size.width / 2, size.height / 2)
                     val radius = min(size.width, size.height) / 2
 
                     // Dibujar el pentágono de estadísticas
-                    drawStatisticPentagon(this, center, radius, statistics.value)
+                    drawFullPentagon(this, center, radius, preguntasRelacion[uiState.currentQuestionIndex].opciones)
 
-                    // Dibujar el pentágono completo
-                    drawFullPentagon(this, center, radius, preguntasRelacion[currentQuestionIndex.value].opciones)
+                    // Dibujar el borde del pentágono
+                    drawStatisticPentagon(this, center, radius, uiState.statistics)
                 }
             }
         } else {
@@ -156,24 +158,23 @@ fun EncuestaScreenBodyContent(
                     text = preguntasRelacion[uiState.numPregunta].enunciado,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier
-                        .padding(8.dp)
-                        .align(Alignment.CenterHorizontally)
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(8.dp)
                 )
 
-                // Cambiamos Row por ScrollableRow para que las opciones se muestren en una fila horizontal
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp),
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    preguntasRelacion[uiState.numPregunta].opciones.forEachIndexed { index, opcion ->
+                // Muestra los botones de radio junto a las opciones
+                preguntasRelacion[uiState.numPregunta].opciones.forEachIndexed { index, opcion ->
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                    ) {
                         RadioButton(
                             selected = index == uiState.respuestaSeleccionada,
-                            onClick = { mvvm.seleccionarRespuesta(index) }
+                            onClick = { mvvm.seleccionarRespuesta(index) },
+                            modifier = Modifier
+                                .padding(end = 8.dp)
+                                .offset(y = 4.dp) // Ajuste para que aparezcan rectos
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
                         Text(text = opcion)
                     }
                 }
@@ -183,31 +184,50 @@ fun EncuestaScreenBodyContent(
                         // Siguiente pregunta
                         mvvm.registrarRespuesta(uiState.respuestaSeleccionada)
                         mvvm.siguientePregunta()
-                        Toast.makeText(context, "Respuesta registrada", Toast.LENGTH_SHORT)
-                            .show()
+                        Toast.makeText(context, "Respuesta registrada", Toast.LENGTH_SHORT).show()
                     },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(8.dp)
+                        .align(Alignment.CenterHorizontally) // Centrar el botón
                 ) {
                     Text(text = "Siguiente Pregunta")
                 }
             } else {
-                Button(onClick = {
-                    statistics.value = generateStatistics(uiState.respuestasSeleccionadas)
-                    showPentagon.value = true
-                }) {
-                    Text(text = "Comprobar")
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp)
+                        .align(Alignment.CenterHorizontally),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Button(
+                        onClick = {
+                            mvvm.reiniciarEncuesta()
+                        }
+                    ) {
+                        Text(text = "Reiniciar Encuesta")
+                    }
+
+                    Button(
+                        onClick = {
+                            if (uiState.numPregunta == preguntasRelacion.size) {
+                                mvvm.calcularPentagono()
+                            } else {
+                                Toast.makeText(
+                                    context,
+                                    "Debe terminar la encuesta para comprobar",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        }
+                    ) {
+                        Text(text = "Comprobar")
+                    }
                 }
             }
         }
     }
-}
-
-
-fun generateStatistics(selectedAnswers: List<Int>): List<Int> {
-    val answerCounts = selectedAnswers.groupingBy { it }.eachCount()
-    return List(5) { answerCounts.getOrDefault(it, 0) }
 }
 
 fun drawStatisticPentagon(
@@ -220,12 +240,10 @@ fun drawStatisticPentagon(
     var startAngle = -90f
 
     val statisticPentagon = Path().apply {
-        repeat(5) {
-            val statValue = if (statistics[it] > 0) 1f else 0.5f
-            val x =
-                center.x + radius * statistics[it] / statistics.size * cos(Math.toRadians(startAngle.toDouble()).toFloat()) * statValue
-            val y =
-                center.y + radius * statistics[it] / statistics.size * sin(Math.toRadians(startAngle.toDouble()).toFloat()) * statValue
+        for (i in 0 until 5) {
+            val statValue = if (statistics[i] > 0) 1f else 0.5f
+            val x = center.x + radius * statistics[i] / statistics.size * cos(Math.toRadians(startAngle.toDouble()).toFloat()) * statValue
+            val y = center.y + radius * statistics[i] / statistics.size * sin(Math.toRadians(startAngle.toDouble()).toFloat()) * statValue
             if (startAngle == -90f) moveTo(x, y) else lineTo(x, y)
             startAngle += angleStep
         }
@@ -234,7 +252,7 @@ fun drawStatisticPentagon(
 
     drawScope.drawPath(
         statisticPentagon,
-        color = Color.Blue,
+        color = Color(android.graphics.Color.parseColor("#FF00FF")),
         style = androidx.compose.ui.graphics.drawscope.Fill
     )
 }
@@ -258,7 +276,7 @@ fun drawFullPentagon(
     var startAngle = -90f
 
     val fullPentagon = Path().apply {
-        repeat(answers.size) { // Usar answers.size en lugar de un valor fijo como 5
+        for (i in answers.indices) {
             val x = center.x + radius * cos(Math.toRadians(startAngle.toDouble()).toFloat())
             val y = center.y + radius * sin(Math.toRadians(startAngle.toDouble()).toFloat())
             if (startAngle == -90f) moveTo(x, y) else lineTo(x, y)
@@ -269,7 +287,7 @@ fun drawFullPentagon(
 
     drawScope.drawPath(
         fullPentagon,
-        color = Color.Black,
+        color = Color(android.graphics.Color.parseColor("#FF00FF")),
         style = androidx.compose.ui.graphics.drawscope.Stroke(4.dp.value)
     )
 
@@ -295,3 +313,4 @@ fun drawFullPentagon(
         )
     }
 }
+
