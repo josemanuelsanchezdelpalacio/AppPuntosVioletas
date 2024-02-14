@@ -93,29 +93,27 @@ fun videosScreenBodyContent(modifier: Modifier, navController: NavHostController
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        ExoPlayerView()
+        ExoPlayerView("https://www.youtube.com/watch?v=SHbXK1M6I30")
     }
 }
 
 @Composable
-fun ExoPlayerView() {
-    val video = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Que_es_punto_violeta_-_Ciudadanos.mp4"
+fun ExoPlayerView(videoUrl: String) {
     val context = LocalContext.current
+    val exoPlayer = remember { ExoPlayer.Builder(context).build() }
+    val coroutineScope = rememberCoroutineScope()
 
-    val exoPlayer = ExoPlayer.Builder(context).build()
-
-    val mediaSource = remember(video) {
-        MediaItem.fromUri(video)
-    }
-
-    LaunchedEffect(mediaSource) {
+    LaunchedEffect(videoUrl) {
+        val mediaSource = MediaItem.fromUri(videoUrl)
         exoPlayer.setMediaItem(mediaSource)
         exoPlayer.prepare()
     }
 
     DisposableEffect(Unit) {
         onDispose {
-            exoPlayer.release()
+            coroutineScope.launch {
+                exoPlayer.release()
+            }
         }
     }
 

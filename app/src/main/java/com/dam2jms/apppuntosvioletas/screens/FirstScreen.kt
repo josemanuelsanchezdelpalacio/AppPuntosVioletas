@@ -80,32 +80,35 @@ fun FirstScreen(navController: NavHostController, mvvm: ViewModelFirstScreen) {
                     }
                 )
             },
+            content = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(it)
+                ) {
+                    GoogleMapView(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxSize(),
+                        cameraPositionState = rememberCameraPositionState { position = CameraPosition.fromLatLngZoom(uiState.coordenadas, 11f) },
+                        uiState = uiState
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+            },
             floatingActionButton = {
                 FloatingActionButton(
                     onClick = { navController.navigate(route = AppScreens.SOS_Screen.route) },
                     containerColor = Color(0xFFAC53F7),
-                    elevation = FloatingActionButtonDefaults.elevation()
+                    elevation = FloatingActionButtonDefaults.elevation(),
+                    modifier = Modifier
+                        .padding(16.dp)
                 ) {
                     Icon(imageVector = Icons.Default.Warning, contentDescription = "SOS")
                 }
             }
-        ) { paddingValues ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-            ) {
-                GoogleMapView(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxSize(),
-                    cameraPositionState = rememberCameraPositionState { position = CameraPosition.fromLatLngZoom(uiState.coordenadas, 11f) },
-                    uiState = uiState
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-            }
-        }
+        )
     }
 }
 
