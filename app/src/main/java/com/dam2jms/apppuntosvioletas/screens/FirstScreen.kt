@@ -30,6 +30,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -41,7 +42,9 @@ import com.dam2jms.apppuntosvioletas.models.ViewModelEncuestaScreen
 import com.dam2jms.apppuntosvioletas.navigation.AppScreens
 import com.dam2jms.apppuntosvioletas.models.ViewModelFirstScreen
 import com.dam2jms.apppuntosvioletas.states.UiState
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.MarkerOptions
 import com.google.maps.android.compose.CameraPositionState
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.Marker
@@ -52,7 +55,6 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FirstScreen(navController: NavHostController, mvvm: ViewModelFirstScreen) {
-    val uiState by mvvm.uiState.collectAsState()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
@@ -90,8 +92,7 @@ fun FirstScreen(navController: NavHostController, mvvm: ViewModelFirstScreen) {
                         modifier = Modifier
                             .weight(1f)
                             .fillMaxSize(),
-                        cameraPositionState = rememberCameraPositionState { position = CameraPosition.fromLatLngZoom(uiState.coordenadas, 11f) },
-                        uiState = uiState
+                        viewModel = mvvm
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -148,17 +149,26 @@ fun DrawerContent(navController: NavHostController) {
 @Composable
 fun GoogleMapView(
     modifier: Modifier = Modifier,
-    cameraPositionState: CameraPositionState,
-    uiState: UiState
+    viewModel: ViewModelFirstScreen
 ) {
-    val puntoVioleta1State = rememberMarkerState(position = uiState.puntoVioleta1)
+    val uiState by viewModel.uiState.collectAsState()
+
     GoogleMap(
         modifier = modifier,
-        cameraPositionState = cameraPositionState
+        cameraPositionState = rememberCameraPositionState {
+            position = CameraPosition.fromLatLngZoom(uiState.coordenadas, 11f)
+        }
     ) {
-        Marker(
-            state = puntoVioleta1State,
-            title = "puntoVioleta1"
-        )
+        MarkerOptions().position(uiState.coordenadas)
+            .title("IES San Alberto")
+            .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET))
+            .draggable(true)
+            .flat(true)
+
+        MarkerOptions().position(uiState.puntoVioleta1)
+            .title("Ayuntamiento")
+            .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET))
+            .draggable(true)
+            .flat(true)
     }
 }
