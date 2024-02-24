@@ -4,8 +4,8 @@ import com.google.android.gms.maps.model.LatLng
 
 
 data class UiState(
-    val coordenadas: LatLng = LatLng(38.35454820180169, -0.6675578816145887),
-    val puntoVioleta1: LatLng = LatLng(42.51821260084617, -0.3644367453749489),
+    val puntoVioleta1: LatLng = LatLng(42.52306378665287, -0.36470226296963065),
+    val puntoVioleta2: LatLng = LatLng(42.51816522796081, -0.3644260015864647),
 
     val isBotonEncuesta: Boolean = false,
     val isBotonSOS: Boolean = false,

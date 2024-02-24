@@ -1,9 +1,13 @@
 package com.dam2jms.apppuntosvioletas.screens
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.ui.Alignment.Horizontal
+import androidx.compose.ui.Alignment.Vertical
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -11,9 +15,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
@@ -44,7 +50,7 @@ import com.dam2jms.apppuntosvioletas.models.ViewModelFirstScreen
 import com.dam2jms.apppuntosvioletas.states.UiState
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
-import com.google.android.gms.maps.model.MarkerOptions
+import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.CameraPositionState
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.Marker
@@ -55,6 +61,7 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FirstScreen(navController: NavHostController, mvvm: ViewModelFirstScreen) {
+    val uiState by mvvm.uiState.collectAsState()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
@@ -83,21 +90,20 @@ fun FirstScreen(navController: NavHostController, mvvm: ViewModelFirstScreen) {
                 )
             },
             content = {
-                Column(
+                Box(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(it)
                 ) {
                     GoogleMapView(
                         modifier = Modifier
-                            .weight(1f)
                             .fillMaxSize(),
-                        viewModel = mvvm
+                        cameraPositionState = rememberCameraPositionState { position = CameraPosition.fromLatLngZoom(uiState.puntoVioleta1, 11f) },
+                        uiState = uiState
                     )
-
-                    Spacer(modifier = Modifier.height(16.dp))
                 }
             },
+            floatingActionButtonPosition = FabPosition.Center,
             floatingActionButton = {
                 FloatingActionButton(
                     onClick = { navController.navigate(route = AppScreens.SOS_Screen.route) },
@@ -124,24 +130,30 @@ fun DrawerContent(navController: NavHostController) {
             Image(
                 modifier = Modifier
                     .size(200.dp)
+                    .align(Alignment.CenterHorizontally)
                     .background(MaterialTheme.colorScheme.background),
                 contentScale = ContentScale.Crop,
                 painter = painterResource(id = R.drawable.logo_puntos_violetas),
                 contentDescription = "logoPuntos"
             )
-            Divider()
+            Spacer(modifier = Modifier.height(16.dp))
+            Divider(color = Color(0xFFAC53F7))
+            Spacer(modifier = Modifier.height(16.dp))
             NavigationDrawerItem(
                 label = { Text(text = "Videos explicativos") },
                 selected = false,
                 onClick = { navController.navigate(route = AppScreens.OpcionesScreen.route)}
             )
-            Divider()
+            Spacer(modifier = Modifier.height(16.dp))
+            Divider(color = Color(0xFFAC53F7))
+            Spacer(modifier = Modifier.height(16.dp))
             NavigationDrawerItem(
                 label = { Text(text = "Encuesta") },
                 selected = false,
                 onClick = { navController.navigate(route = AppScreens.EncuestaScreen.route) }
             )
-            Divider()
+            Spacer(modifier = Modifier.height(16.dp))
+            Divider(color = Color(0xFFAC53F7))
         }
     }
 }
@@ -149,26 +161,20 @@ fun DrawerContent(navController: NavHostController) {
 @Composable
 fun GoogleMapView(
     modifier: Modifier = Modifier,
-    viewModel: ViewModelFirstScreen
+    cameraPositionState: CameraPositionState,
+    uiState: UiState
 ) {
-    val uiState by viewModel.uiState.collectAsState()
-
     GoogleMap(
         modifier = modifier,
-        cameraPositionState = rememberCameraPositionState {
-            position = CameraPosition.fromLatLngZoom(uiState.coordenadas, 11f)
-        }
+        cameraPositionState = cameraPositionState
     ) {
-        MarkerOptions().position(uiState.coordenadas)
-            .title("IES San Alberto")
-            .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET))
-            .draggable(true)
-            .flat(true)
-
-        MarkerOptions().position(uiState.puntoVioleta1)
-            .title("Ayuntamiento")
-            .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET))
-            .draggable(true)
-            .flat(true)
+        Marker(
+            state = rememberMarkerState(position = uiState.puntoVioleta1),
+            title = "IES San Alberto"
+        )
+        Marker(
+            state = rememberMarkerState(position = uiState.puntoVioleta2),
+            title = "Ayuntamiento Sabiñanigo"
+        )
     }
 }

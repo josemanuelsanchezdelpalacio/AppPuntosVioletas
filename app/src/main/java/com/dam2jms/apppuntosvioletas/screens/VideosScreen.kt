@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Warning
@@ -86,6 +88,11 @@ fun OpcionesScreen(navController: NavHostController) {
 
 @Composable
 fun videosScreenBodyContent(modifier: Modifier, navController: NavHostController) {
+    val videoUrls = listOf(
+        "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+        "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+        "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+    )
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -93,9 +100,19 @@ fun videosScreenBodyContent(modifier: Modifier, navController: NavHostController
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        ExoPlayerView("https://www.youtube.com/watch?v=SHbXK1M6I30")
+        LazyColumn(
+            modifier = modifier
+                .fillMaxSize()
+                .padding(16.dp)
+        ) {
+            items(videoUrls) { videoUrl ->
+                ExoPlayerView(videoUrl)
+            }
+        }
     }
+
 }
+
 
 @Composable
 fun ExoPlayerView(videoUrl: String) {
