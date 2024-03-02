@@ -26,6 +26,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.dam2jms.apppuntosvioletas.models.ViewModelSOS_Screen
@@ -82,6 +83,7 @@ fun SOS_Screen(navController: NavHostController, mvvm: ViewModelSOS_Screen) {
 
 @Composable
 fun SOS_ScreenBodyContent(modifier: Modifier, mvvm: ViewModelSOS_Screen, navController: NavHostController, uiState: UiState) {
+    val context = LocalContext.current
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -89,14 +91,11 @@ fun SOS_ScreenBodyContent(modifier: Modifier, mvvm: ViewModelSOS_Screen, navCont
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Button(onClick = { mvvm.llamada112() }) {
+        Button(onClick = { mvvm.llamada112(context) }) {
             Text("Llamada 112")
         }
         Button(onClick = { mvvm.alarma() }) {
             Text("Alarma")
-        }
-        Button(onClick = { mvvm.mandarUbicacionContacto() }) {
-            Text("Mandar ubicacion a contacto")
         }
     }
 }

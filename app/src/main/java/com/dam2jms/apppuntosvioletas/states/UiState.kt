@@ -11,6 +11,10 @@ data class UiState(
     val isBotonSOS: Boolean = false,
     val isMenuDesplegable: Boolean = false,
 
+    val llamada112Realizada: Boolean = false,
+    val alarmaActivada: Boolean = false,
+    val ubicacionEnviada: Boolean = false,
+
     var numPregunta: Int = 0,
     var respuestaSeleccionada: Int = -1,
     var respuestasSeleccionadas: List<Int> = listOf(),
