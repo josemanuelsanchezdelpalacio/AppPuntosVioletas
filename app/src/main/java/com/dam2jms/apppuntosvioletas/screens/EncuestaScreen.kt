@@ -155,62 +155,66 @@ fun EncuestaScreenBodyContent(modifier: Modifier, mvvm: ViewModelEncuestaScreen,
                 }
             }
         } else {
-            //mientras que la pregunta actual es menor a la cantidad de preguntas en la lista muestro las preguntas
-            if (uiState.numPregunta < preguntasLista.size) {
-                Text(
-                    text = preguntasLista[uiState.numPregunta].enunciado,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(8.dp)
-                )
-                preguntasLista[uiState.numPregunta].opciones.forEachIndexed { index, opcion ->
-                    Row(
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        RadioButton(
-                            selected = index == uiState.respuestaSeleccionada,
-                            onClick = { mvvm.seleccionarRespuesta(index) },
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(text = opcion)
-                    }
+            // Mientras que la pregunta actual es menor a la cantidad de preguntas en la lista, muestra las preguntas
+if (uiState.numPregunta < preguntasLista.size) {
+    Text(
+        text = preguntasLista[uiState.numPregunta].enunciado,
+        fontSize = 18.sp,
+        fontWeight = FontWeight.Bold,
+        textAlign = TextAlign.Center,
+        modifier = Modifier.padding(8.dp)
+    )
 
-                }
-                Button(
-                    onClick = {
-                        if (uiState.respuestaSeleccionada == -1) {
-                            Toast.makeText(context, "Debes seleccionar una respuesta", Toast.LENGTH_SHORT).show()
-                        } else {
-                            mvvm.registrarRespuesta(uiState.respuestaSeleccionada)
-                            mvvm.siguientePregunta()
+    // Utilizando un bucle for para recorrer las opciones de la pregunta actual
+    for (index in preguntasLista[uiState.numPregunta].opciones.indices) {
+        val opcion = preguntasLista[uiState.numPregunta].opciones[index]
 
-                            if (uiState.numPregunta == preguntasLista.size - 1) {
-                                // Si es la última pregunta, realiza la acción de comprobar
-                                mvvm.calcularPentagono()
-                            }
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            RadioButton(
+                selected = index == uiState.respuestaSeleccionada,
+                onClick = { mvvm.seleccionarRespuesta(index) },
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(text = opcion)
+        }
+    }
 
-                            Toast.makeText(context, "Respuesta registrada", Toast.LENGTH_SHORT).show()
-                        }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp)
-                        .align(Alignment.CenterHorizontally)
-                ) {
-                    Text(text = if (uiState.numPregunta == preguntasLista.size - 1) "Comprobar" else "Siguiente Pregunta")
+    Button(
+        onClick = {
+            if (uiState.respuestaSeleccionada == -1) {
+                Toast.makeText(context, "Debes seleccionar una respuesta", Toast.LENGTH_SHORT).show()
+            } else {
+                mvvm.registrarRespuesta(uiState.respuestaSeleccionada)
+                mvvm.siguientePregunta()
+
+                if (uiState.numPregunta == preguntasLista.size - 1) {
+                    // Si es la última pregunta, realiza la acción de comprobar
+                    mvvm.calcularPentagono()
                 }
 
-                // Botón para reiniciar encuesta
-                Button(
-                    onClick = { mvvm.reiniciarEncuesta() },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp)
-                        .align(Alignment.CenterHorizontally)
+                Toast.makeText(context, "Respuesta registrada", Toast.LENGTH_SHORT).show()
+                }
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp)
+                .align(Alignment.CenterHorizontally)
+            ) {
+                Text(text = if (uiState.numPregunta == preguntasLista.size - 1) "Comprobar" else "Siguiente Pregunta")
+            }
+
+            // Botón para reiniciar encuesta
+            Button(
+                onClick = { mvvm.reiniciarEncuesta() },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp)
+                    .align(Alignment.CenterHorizontally)
                 ) {
                     Text(text = "Reiniciar Encuesta")
                 }
