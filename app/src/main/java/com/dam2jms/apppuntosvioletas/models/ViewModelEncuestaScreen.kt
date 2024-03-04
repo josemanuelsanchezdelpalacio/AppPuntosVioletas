@@ -9,6 +9,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.asComposePaint
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.text.AnnotatedString
@@ -40,36 +41,38 @@ class ViewModelEncuestaScreen : ViewModel() {
         _uiState.value = _uiState.value.copy(numPregunta = _uiState.value.numPregunta + 1)
     }
 
+    //metodo para calcular la puntuacion segun las respuestas y dibuja las aristas del pentagono interior
     fun calcularPentagono() {
-        val answerCounts = _uiState.value.respuestasSeleccionadas.groupingBy { it }.eachCount()
-        val statistics = List(5) { answerCounts.getOrDefault(it, 0) }
-        _uiState.value = _uiState.value.copy(estatisticas = statistics, mostrarPentagono = true)
+        val respuestasPuntuacion = _uiState.value.respuestasSeleccionadas.groupingBy { it }.eachCount()
+        val estadisticas = List(5) { respuestasPuntuacion.getOrDefault(it, 0) }
+        _uiState.value = _uiState.value.copy(estatisticas = estadisticas, mostrarPentagono = true)
     }
 
+    //dibuja el pentagono interno que es el que se dibuja calculando las estadisticas
     fun drawStatisticPentagon(
         drawScope: DrawScope,
-        center: Offset,
-        radius: Float,
-        statistics: List<Int>
+        centro: Offset,
+        radio: Float,
+        estadisticas: List<Int>
     ) {
-        val angleStep = 72f
-        var startAngle = -90f
+        val lineaEntreAngulo = 72f
+        var inicioAngulo = -90f
 
-        val statisticPentagon = Path().apply {
+        val pentagonoEstadisticas = Path().apply {
             for (i in 0 until 5) {
-                val statValue = if (statistics[i] > 0) 1f else 0.5f
-                val x = center.x + radius * statistics[i] / statistics.size * cos(Math.toRadians(startAngle.toDouble()).toFloat()) * statValue
-                val y = center.y + radius * statistics[i] / statistics.size * sin(Math.toRadians(startAngle.toDouble()).toFloat()) * statValue
-                if (startAngle == -90f) moveTo(x, y) else lineTo(x, y)
-                startAngle += angleStep
+                val inicioAngulo = if (estadisticas[i] > 0) 1f else 0.5f
+                val x = centro.x + radio * statistics[i] / estadisticas.size * cos(Math.toRadians(inicioAngulo.toDouble()).toFloat()) * statValue
+                val y = centro.y + radio * statistics[i] / estadisticas.size * sin(Math.toRadians(inicioAngulo.toDouble()).toFloat()) * statValue
+                if (inicioAngulo == -90f) moveTo(x, y) else lineTo(x, y)
+                inicioAngulo += lineaEntreAngulo
             }
             close()
         }
 
         drawScope.drawPath(
-            statisticPentagon,
+            pentagonoEstadisticas,
             color = Color(parseColor("#FF00FF")),
-            style = androidx.compose.ui.graphics.drawscope.Fill
+            style = Fill
         )
     }
 
@@ -82,16 +85,17 @@ class ViewModelEncuestaScreen : ViewModel() {
         drawContext.canvas.nativeCanvas.drawText(text.toString(), x, y, paint.asFrameworkPaint())
     }
 
+    //dibuja el pentagono exterior
     fun drawFullPentagon(drawScope: DrawScope, center: Offset, radius: Float, respuestas: List<String>) {
-        val angleStep = 72f
-        var startAngle = -90f
+        val lineaEntreAngulo = 72f
+        var inicioAngulo = -90f
 
         val pentagonoGrande = Path().apply {
             for (i in respuestas.indices) {
-                val x = center.x + radius * cos(Math.toRadians(startAngle.toDouble()).toFloat())
-                val y = center.y + radius * sin(Math.toRadians(startAngle.toDouble()).toFloat())
-                if (startAngle == -90f) moveTo(x, y) else lineTo(x, y)
-                startAngle += angleStep
+                val x = center.x + radius * cos(Math.toRadians(inicioAngulo.toDouble()).toFloat())
+                val y = center.y + radius * sin(Math.toRadians(inicioAngulo.toDouble()).toFloat())
+                if (inicioAngulo == -90f) moveTo(x, y) else lineTo(x, y)
+                inicioAngulo += lineaEntreAngulo
             }
             close()
         }
@@ -108,13 +112,13 @@ class ViewModelEncuestaScreen : ViewModel() {
 
         val textPaint = paint.asComposePaint()
         val textOffset = 20.dp
-        val textRadius = radius + textOffset.value
+        val texto = radius + textOffset.value
 
         for (i in respuestas.indices) {
             val angulo = Math.toRadians(-90 + i * 72.toDouble()).toFloat()
-            val x = center.x + textRadius * cos(angulo)
-            val y = center.y + textRadius * sin(angulo)
-            drawScope.drawText(text = AnnotatedString(respuestas[i]), x = x, y = y, paint = textPaint)
+            val x = center.x + texto * cos(angulo)
+            val y = center.y + texto * sin(angulo)
+            drawScope.drawText(text = AnnotatedString(respuestas[i]), x = x, y = y, paint = texto)
         }
     }
 }
